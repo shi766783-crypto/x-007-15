@@ -9,6 +9,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import BaseTag from '@/components/common/BaseTag.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
 import SimpleChart from '@/components/common/SimpleChart.vue'
+import NutritionGapAnalysis from '@/components/common/NutritionGapAnalysis.vue'
 
 const diet = useDietRecordStore()
 const mealPlan = useMealPlanStore()
@@ -122,6 +123,11 @@ function removeRecord(id) {
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">营养缺口分析</div>
+      <NutritionGapAnalysis :dishes="dayDishes" empty-text="当天记录菜品后，这里会显示该补哪一类、该减哪一类" />
     </div>
 
     <div class="card">

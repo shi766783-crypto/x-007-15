@@ -5,6 +5,7 @@ import { useInventoryStore } from '@/stores/inventory'
 import { useDietRecordStore } from '@/stores/dietRecord'
 import StatCard from '@/components/common/StatCard.vue'
 import SimpleChart from '@/components/common/SimpleChart.vue'
+import NutritionGapAnalysis from '@/components/common/NutritionGapAnalysis.vue'
 import { weekDateKeys, parseDateKey } from '@/utils/date'
 
 const stats = useStatsStore()
@@ -14,6 +15,9 @@ const diet = useDietRecordStore()
 const weekDates = weekDateKeys()
 const trendLabels = computed(() => weekDates.map((d) => `${parseDateKey(d).getMonth() + 1}/${parseDateKey(d).getDate()}`))
 const trendData = computed(() => weekDates.map((d) => diet.dailyScores[d] || 0))
+const weekDishes = computed(() =>
+  diet.records.filter((r) => weekDates.includes(r.date)).flatMap((r) => r.dishes)
+)
 
 const categoryStats = computed(() => {
   const cats = {}
@@ -35,6 +39,11 @@ const catData = computed(() => Object.values(categoryStats.value))
       <StatCard label="食材浪费率" :value="(stats.wasteRate * 100).toFixed(1)" suffix="%" icon="🗑️" color="#ef5350" />
       <StatCard label="本周采购花费" :value="stats.weeklySpend.toFixed(1)" suffix="元" icon="💰" color="#ff9800" />
       <StatCard label="本周平均营养评分" :value="stats.avgNutritionThisWeek" icon="⚖️" color="#4caf50" />
+    </div>
+
+    <div class="card">
+      <div class="section-title">本周营养缺口分析</div>
+      <NutritionGapAnalysis :dishes="weekDishes" empty-text="本周记录菜品后，这里会汇总蛋白质、蔬菜和主食的缺口" />
     </div>
 
     <div class="grid grid-2">
