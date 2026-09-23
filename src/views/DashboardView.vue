@@ -5,6 +5,7 @@ import { useInventoryStore } from '@/stores/inventory'
 import { useDietRecordStore } from '@/stores/dietRecord'
 import StatCard from '@/components/common/StatCard.vue'
 import SimpleChart from '@/components/common/SimpleChart.vue'
+import NutritionGap from '@/components/common/NutritionGap.vue'
 import { weekDateKeys, parseDateKey } from '@/utils/date'
 
 const stats = useStatsStore()
@@ -48,6 +49,14 @@ const catData = computed(() => Object.values(categoryStats.value))
       </div>
     </div>
 
+    <div class="card">
+      <div class="section-title">
+        <span>本周营养缺口分析</span>
+        <span class="muted sub">蛋白质 / 蔬菜 / 主食 实际占比 vs 目标占比</span>
+      </div>
+      <NutritionGap :dishes="diet.dishesThisWeek" empty-text="本周还没有饮食记录，记录后这里会提示该补哪类、该减哪类" />
+    </div>
+
     <div class="grid grid-3">
       <div class="card">
         <div class="section-title">库存状态</div>
@@ -79,6 +88,10 @@ const catData = computed(() => Object.values(categoryStats.value))
 <style scoped>
 h2 {
   margin-bottom: 16px;
+}
+.sub {
+  font-size: 12px;
+  font-weight: 400;
 }
 .grid {
   margin-bottom: 16px;

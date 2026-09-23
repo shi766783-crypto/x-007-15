@@ -9,6 +9,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import BaseTag from '@/components/common/BaseTag.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
 import SimpleChart from '@/components/common/SimpleChart.vue'
+import NutritionGap from '@/components/common/NutritionGap.vue'
 
 const diet = useDietRecordStore()
 const mealPlan = useMealPlanStore()
@@ -19,7 +20,7 @@ const dishes = ref([{ name: '', category: '蔬菜' }])
 const weekDates = weekDateKeys()
 
 const dayRecords = computed(() => diet.records.filter((r) => r.date === date.value))
-const dayDishes = computed(() => dayRecords.value.flatMap((r) => r.dishes))
+const dayDishes = computed(() => diet.dishesByDate(date.value))
 const dayScore = computed(() => nutritionScore(dayDishes.value))
 const score = computed(() => scoreLabel(dayScore.value))
 
@@ -122,6 +123,14 @@ function removeRecord(id) {
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <span>{{ date }} 营养缺口分析</span>
+        <BaseTag :text="`${dayScore} 分 · ${score.label}`" :color="score.color" />
+      </div>
+      <NutritionGap :dishes="dayDishes" empty-text="当天还没有记录，记录后可查看该补哪类、该减哪类" />
     </div>
 
     <div class="card">

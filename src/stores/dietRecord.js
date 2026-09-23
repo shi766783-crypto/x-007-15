@@ -30,6 +30,16 @@ export const useDietRecordStore = defineStore('dietRecord', {
       return rec ? rec.dishes : []
     },
 
+    // 某日全部餐次的菜品（用于营养缺口分析）
+    dishesByDate: (state) => (date) =>
+      state.records.filter((r) => r.date === date).flatMap((r) => r.dishes),
+
+    // 本周已记录的全部菜品
+    dishesThisWeek(state) {
+      const weekSet = new Set(weekDateKeys())
+      return state.records.filter((r) => weekSet.has(r.date)).flatMap((r) => r.dishes)
+    },
+
     // 每日营养评分
     dailyScores() {
       const map = {}

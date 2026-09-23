@@ -10,8 +10,17 @@ export function categoryToGroup(category) {
   return '其他'
 }
 
-// 理想占比：蔬菜 50%、蛋白质 25%、主食 25%
-const IDEAL = { 蛋白质: 0.25, 蔬菜: 0.5, 主食: 0.25 }
+// 核心食物组的目标占比（"健康餐盘"）：蔬菜 50%、蛋白质 25%、主食 25%
+export const IDEAL_GROUPS = [
+  { key: '蛋白质', ratioKey: 'protein', icon: '🥩', color: '#ef5350', ideal: 0.25 },
+  { key: '蔬菜', ratioKey: 'vegetable', icon: '🥬', color: '#4caf50', ideal: 0.5 },
+  { key: '主食', ratioKey: 'staple', icon: '🍚', color: '#8d6e63', ideal: 0.25 },
+]
+
+const IDEAL = Object.fromEntries(IDEAL_GROUPS.map((g) => [g.key, g.ideal]))
+
+// 占比偏离目标达到该幅度（10 个百分点）才提示"该补/该减"，避免一菜之差频繁报警
+export const GAP_THRESHOLD = 0.1
 
 // 对一组菜品（每项含 category）计算营养平衡分
 export function nutritionScore(dishes) {
@@ -54,5 +63,54 @@ export function dishGroupRatio(dishes) {
     vegetable: groups['蔬菜'] / total,
     staple: groups['主食'] / total,
     other: groups['其他'] / total,
+  }
+}
+
+// 营养缺口分析：拆开蛋白质/蔬菜/主食的实际占比，与目标占比对比
+// 返回每组的实际/目标占比、偏离百分点、状态（lack 该补 / excess 该减 / ok 均衡）与调整建议
+export function nutritionGap(dishes = []) {
+  const total = dishes.length
+  const counts = { 蛋白质: 0, 蔬菜: 0, 主食: 0, 其他: 0 }
+  dishes.forEach((d) => {
+    const g = categoryToGroup(d.category)
+    counts[g] = (counts[g] || 0) + 1
+  })
+  const ratio = dishGroupRatio(dishes)
+
+  const groups = IDEAL_GROUPS.map((meta) => {
+    const count = counts[meta.key] || 0
+    const actual = ratio[meta.ratioKey]
+    const diff = total ? actual - meta.ideal : 0 // 正=偏多，负=偏少
+    let status = 'ok'
+    if (total && Math.abs(diff) >= GAP_THRESHOLD) status = diff > 0 ? 'excess' : 'lack'
+    // 达到目标占比大约需要的道数与当前的差值（正=建议加几道菜，负=建议减几道）
+    const suggestCount = Math.round(meta.ideal * total) - count
+    let advice = '占比均衡'
+    if (status === 'lack') advice = suggestCount > 0 ? `建议增加约 ${suggestCount} 道` : '建议适当增加'
+    else if (status === 'excess') advice = suggestCount < 0 ? `建议减少约 ${Math.abs(suggestCount)} 道` : '建议适当减少'
+    return {
+      ...meta,
+      count,
+      actual,
+      actualPct: Math.round(actual * 100),
+      idealPct: Math.round(meta.ideal * 100),
+      diffPct: Math.round(diff * 100),
+      status,
+      suggestCount,
+      advice,
+    }
+  })
+
+  const lack = groups.filter((g) => g.status === 'lack')
+  const excess = groups.filter((g) => g.status === 'excess')
+  return {
+    total,
+    groups,
+    lack,
+    excess,
+    otherCount: counts['其他'] || 0,
+    otherPct: Math.round(ratio.other * 100),
+    balanced: total > 0 && !lack.length && !excess.length,
+    empty: !total,
   }
 }
